@@ -38,8 +38,8 @@ const App: React.FC = () => {
 			<NavbarWebsite />
 			{renderAlert()}
 			<Routes>
-				<Route path="/finanzas" element={<DatosDolar />} />
-				<Route path="/finanzas/bcra" element={<DatosBCRA />} />
+				<Route path="/" element={<DatosDolar />} />
+				<Route path="bcra" element={<DatosBCRA />} />
 			</Routes>
 			<Footer />
 		</>

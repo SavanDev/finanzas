@@ -20,10 +20,10 @@ function NavbarWebsite() {
 				<Navbar.Toggle aria-controls="navbar-bar" />
 				<Navbar.Collapse id="navbar-bar">
 					<Nav className="me-auto">
-						<Nav.Link className="icon-link" as={Link} to="/finanzas">
+						<Nav.Link className="icon-link" as={Link} to="/">
 							<HouseFill /> Home
 						</Nav.Link>
-						<Nav.Link className="icon-link" as={Link} to="/finanzas/bcra">
+						<Nav.Link className="icon-link" as={Link} to="/bcra">
 							<Bank /> BCRA
 						</Nav.Link>
 						<Nav.Link
