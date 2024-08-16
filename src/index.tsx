@@ -1,7 +1,20 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import App from './App';
+import React from "react";
+import ReactDOM from "react-dom";
+import App from "./App";
+import TimeAgo from "javascript-time-ago";
 
-import 'bootstrap/dist/css/bootstrap.min.css';
+import "bootstrap/dist/css/bootstrap.min.css";
+import { BrowserRouter } from "react-router-dom";
 
-ReactDOM.render(<App />, document.getElementById('root'));
+import es from "javascript-time-ago/locale/es";
+import en from "javascript-time-ago/locale/en";
+
+TimeAgo.addDefaultLocale(es);
+TimeAgo.addLocale(en);
+
+ReactDOM.render(
+	<BrowserRouter>
+		<App />
+	</BrowserRouter>,
+	document.getElementById("root")
+);
