@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Card, Col, Container, Row } from "react-bootstrap";
+import { Card, Col, Container, Placeholder, Row, Stack } from "react-bootstrap";
+import { Cash } from "react-bootstrap-icons";
 import ReactTimeAgo from "react-time-ago";
 
 // Estado para almacenar los datos de la API
@@ -114,47 +115,71 @@ function DatosDolar() {
 
 	return (
 		<Container fluid>
-			<h1 className="display-5 m-3">Datos del Dólar - CriptoYa</h1>
+			<h1 className="display-5 m-3">Datos del Dólar</h1>
 			<Row className="justify-content-center gap-3">
-				{currencies?.map((currency, index) => (
-					<Col lg="2" key={index}>
+				{currencies !== undefined ? (
+					currencies?.map((currency, index) => (
+						<Col lg="2" key={index}>
+							<Card>
+								<Card.Header className="text-truncate icon-link">
+									<Cash />
+									<b>{currency.type}</b>
+								</Card.Header>
+								<Card.Body>
+									<Card.Title>
+										{currency.ask !== undefined
+											? `$ ${currency.ask} / $ ${currency.bid}`
+											: currency.price !== undefined
+											? `$ ${currency.price}`
+											: "$ ..."}
+									</Card.Title>
+									{currency.variation !== null ? (
+										<Card.Subtitle
+											className={
+												currency.variation < 0 ? "text-danger" : "text-success"
+											}
+										>
+											{currency.variation < 0 ? "▼" : "▲"} {currency.variation}
+										</Card.Subtitle>
+									) : (
+										<Card.Subtitle>...</Card.Subtitle>
+									)}
+								</Card.Body>
+								<Card.Footer className="text-body-secondary">
+									<Stack direction="horizontal">
+										<div>
+											{currency.timestamp !== null ? (
+												<ReactTimeAgo
+													date={new Date(currency.timestamp * 1000)}
+													locale="es-AR"
+												/>
+											) : (
+												"..."
+											)}
+										</div>
+										<div className="ms-auto">Fuente: CriptoYa</div>
+									</Stack>
+								</Card.Footer>
+							</Card>
+						</Col>
+					))
+				) : (
+					<Col lg="2">
 						<Card>
-							<Card.Header className="text-truncate">
-								{currency.type}
-							</Card.Header>
+							<Placeholder as={Card.Header} animation="glow">
+								<Placeholder xs={4} />
+							</Placeholder>
 							<Card.Body>
-								<Card.Title>
-									{currency.ask !== undefined
-										? `$ ${currency.ask} / $ ${currency.bid}`
-										: currency.price !== undefined
-										? `$ ${currency.price}`
-										: "$ ..."}
-								</Card.Title>
-								{currency.variation !== null ? (
-									<Card.Subtitle
-										className={
-											currency.variation < 0 ? "text-danger" : "text-success"
-										}
-									>
-										{currency.variation < 0 ? "▼" : "▲"} {currency.variation}
-									</Card.Subtitle>
-								) : (
-									<Card.Subtitle>...</Card.Subtitle>
-								)}
+								<Placeholder as={Card.Title} animation="glow">
+									<Placeholder xs={6} />
+								</Placeholder>
 							</Card.Body>
-							<Card.Footer>
-								{currency.timestamp !== null ? (
-									<ReactTimeAgo
-										date={new Date(currency.timestamp * 1000)}
-										locale="es-AR"
-									/>
-								) : (
-									"..."
-								)}
-							</Card.Footer>
+							<Placeholder as={Card.Footer} animation="glow">
+								<Placeholder xs={7} />
+							</Placeholder>
 						</Card>
 					</Col>
-				))}
+				)}
 			</Row>
 			<p className="text-center mt-4">Última actualización: {lastUpdated}</p>
 		</Container>

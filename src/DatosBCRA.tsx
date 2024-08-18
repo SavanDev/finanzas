@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Card, Col, Container, Row } from "react-bootstrap";
+import {
+	Button,
+	Card,
+	Col,
+	Container,
+	Modal,
+	Placeholder,
+	Row,
+	Stack,
+} from "react-bootstrap";
+import Graph from "./components/Graph";
 
 // Tipos para las respuestas de la API
 interface ApiResponse {
@@ -9,23 +19,33 @@ interface ApiResponse {
 }
 
 interface ApiSpecialResponse {
-	lefi: number;
+	lefiBCRA: number;
 	depositosBCRA: number;
+	lefiBancos: number;
+	bopreal: number;
+	boprealDato: string;
+	lefiDepositosDato: string;
 }
 
 interface VariableData {
 	orden: number;
 	nombre: string;
-	valor: number | null;
-	fecha: number | null;
-	esPorcentaje: boolean | null;
-	esDolar?: boolean | false;
-	esMensual?: boolean | false;
+	valor: number;
+	fecha: number;
+	esPorcentaje: boolean;
+	esDolar?: boolean;
+	esMensual?: boolean;
+	idVariable: number;
+	nombreValor?: string;
 }
 
 interface VariableExtraData {
-	lefi: number;
+	lefiBCRA: number;
 	depositosBCRA: number;
+	lefiBancos: number;
+	bopreal: number;
+	boprealDato: string;
+	lefiDepositosDato: string;
 }
 
 // URL de la API del BCRA
@@ -48,8 +68,13 @@ const month = [
 	"Diciembre",
 ];
 
-let baseMonetariaAmpliada: number;
+let baseMonetariaAmpliada: number = 0;
 let reservasBCRA: number = 0;
+
+let graphVariable: number = 27;
+let graphNombre: string = "Inflación mensual";
+let graphValor: string = "Valor";
+let graphMensual: boolean = true;
 
 function DatosBCRA() {
 	const [datos, setDatos] = useState<VariableData[]>();
@@ -67,9 +92,35 @@ function DatosBCRA() {
 		return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 	};
 
+	const [show, setShow] = useState(false);
+
+	const handleClose = () => setShow(false);
+	const handleShow = () => setShow(true);
+
+	const [showBOPREAL, setShowBOPREAL] = useState(false);
+
+	const handleCloseBOPREAL = () => setShowBOPREAL(false);
+	const handleShowBOPREAL = () => setShowBOPREAL(true);
+
+	const [showGraph, setShowGraph] = useState(false);
+
+	const handleCloseGraph = () => setShowGraph(false);
+	const handleShowGraph = (
+		idVariable: number,
+		name: string,
+		porMes: boolean,
+		valor: string
+	) => {
+		graphVariable = idVariable;
+		graphNombre = name;
+		graphMensual = porMes;
+		graphValor = valor;
+		setShowGraph(true);
+	};
+
 	useEffect(() => {
-		baseMonetariaAmpliada = 0;
 		async function obtenerDatosBCRA() {
+			baseMonetariaAmpliada = 0;
 			try {
 				const response = await fetch(apiUrl, {
 					method: "GET",
@@ -98,6 +149,7 @@ function DatosBCRA() {
 								esPorcentaje: false,
 								esDolar: true,
 								orden: 0,
+								idVariable: element.idVariable,
 							});
 							reservasBCRA = element.valor;
 							break;
@@ -108,6 +160,7 @@ function DatosBCRA() {
 								fecha: parsedDate,
 								esPorcentaje: false,
 								orden: 1,
+								idVariable: element.idVariable,
 							});
 							baseMonetariaAmpliada += element.valor;
 							break;
@@ -118,6 +171,7 @@ function DatosBCRA() {
 								fecha: parsedDate,
 								esPorcentaje: true,
 								orden: 2,
+								idVariable: element.idVariable,
 							});
 							break;
 						case 27:
@@ -128,6 +182,8 @@ function DatosBCRA() {
 								esPorcentaje: true,
 								esMensual: true,
 								orden: 0,
+								idVariable: element.idVariable,
+								nombreValor: "Mensual",
 							});
 							break;
 						case 28:
@@ -138,6 +194,8 @@ function DatosBCRA() {
 								esPorcentaje: true,
 								esMensual: true,
 								orden: 1,
+								idVariable: element.idVariable,
+								nombreValor: "Interanual",
 							});
 							break;
 						case 4:
@@ -147,6 +205,7 @@ function DatosBCRA() {
 								fecha: parsedDate,
 								esPorcentaje: false,
 								orden: 0,
+								idVariable: element.idVariable,
 							});
 							break;
 						case 5:
@@ -156,6 +215,7 @@ function DatosBCRA() {
 								fecha: parsedDate,
 								esPorcentaje: false,
 								orden: 1,
+								idVariable: element.idVariable,
 							});
 							break;
 					}
@@ -174,10 +234,14 @@ function DatosBCRA() {
 
 				data2.forEach((element: ApiSpecialResponse) => {
 					setExtra({
-						lefi: element.lefi,
+						lefiBCRA: element.lefiBCRA,
 						depositosBCRA: element.depositosBCRA,
+						lefiBancos: element.lefiBancos,
+						bopreal: element.bopreal,
+						boprealDato: element.boprealDato,
+						lefiDepositosDato: element.lefiDepositosDato,
 					});
-					baseMonetariaAmpliada += element.lefi + element.depositosBCRA;
+					baseMonetariaAmpliada += element.depositosBCRA;
 				});
 
 				// Actualizar el estado con los datos formateados
@@ -207,62 +271,117 @@ function DatosBCRA() {
 		<Container fluid>
 			<h1 className="display-5 m-3">Datos BCRA</h1>
 			<Row className="justify-content-center gap-3">
-				{datos?.map((valor, index) => (
-					<Col lg="2" key={index}>
-						<Card>
-							<Card.Header className="text-truncate">
-								{valor.nombre !== null ? valor.nombre : "..."}
-							</Card.Header>
-							{valor.esPorcentaje !== null ? (
-								valor.esPorcentaje ? (
-									<Card.Body className="text-center">
-										<Card.Text as="h3">
-											{valor.valor !== null ? `${valor.valor}%` : "...%"}
-										</Card.Text>
-									</Card.Body>
+				{datos !== undefined ? (
+					datos?.map((valor, index) => (
+						<Col lg="2" key={index}>
+							<Card
+								style={{ cursor: "pointer" }}
+								onClick={() =>
+									handleShowGraph(
+										valor.idVariable !== undefined ? valor.idVariable : 27,
+										valor.nombre,
+										valor.esMensual !== undefined ? valor.esMensual : false,
+										valor.nombreValor !== undefined
+											? valor.nombreValor
+											: "Valor"
+									)
+								}
+							>
+								<Card.Header className="text-truncate">
+									{valor.nombre !== null ? valor.nombre : "..."}
+								</Card.Header>
+								{valor.esPorcentaje !== null ? (
+									valor.esPorcentaje ? (
+										<Card.Body className="text-center">
+											<Card.Text as="h3">
+												{valor.valor !== null ? `${valor.valor}%` : "...%"}
+											</Card.Text>
+										</Card.Body>
+									) : (
+										<Card.Body>
+											<Card.Title>
+												{valor.valor !== null
+													? `$ ${numberWithCommas(Math.trunc(valor.valor))}`
+													: "$ ..."}
+											</Card.Title>
+											<Card.Subtitle>
+												en millones de {valor.esDolar ? "dólares" : "pesos"}
+											</Card.Subtitle>
+										</Card.Body>
+									)
 								) : (
 									<Card.Body>
-										<Card.Title>
-											{valor.valor !== null
-												? `$ ${numberWithCommas(Math.trunc(valor.valor))}`
-												: "$ ..."}
-										</Card.Title>
-										<Card.Subtitle>
-											en millones de {valor.esDolar ? "dólares" : "pesos"}
-										</Card.Subtitle>
+										<Card.Text>Cargando...</Card.Text>
 									</Card.Body>
-								)
-							) : (
-								<Card.Body>
-									<Card.Text>Cargando...</Card.Text>
-								</Card.Body>
-							)}
-							<Card.Footer className="text-body-secondary">
-								{valor.fecha !== null
-									? valor.esMensual
-										? month[new Date(valor.fecha).getMonth()]
-										: `Hace ${Math.trunc(
-												dateDifferenceInSeconds(valor.fecha, Date.now())
-										  )} días`
-									: "..."}
-							</Card.Footer>
+								)}
+								<Card.Footer className="text-body-secondary">
+									<Stack direction="horizontal">
+										<div>
+											{valor.fecha !== null
+												? valor.esMensual
+													? month[new Date(valor.fecha).getMonth()]
+													: `Hace ${Math.trunc(
+															dateDifferenceInSeconds(valor.fecha, Date.now())
+													  )} días`
+												: "..."}
+										</div>
+										<div className="ms-auto">Fuente: BCRA</div>
+									</Stack>
+								</Card.Footer>
+							</Card>
+						</Col>
+					))
+				) : (
+					<Col lg="2">
+						<Card>
+							<Placeholder as={Card.Header} animation="glow">
+								<Placeholder xs={4} />
+							</Placeholder>
+							<Card.Body>
+								<Placeholder as={Card.Title} animation="glow">
+									<Placeholder xs={6} />
+								</Placeholder>
+							</Card.Body>
+							<Placeholder as={Card.Footer} animation="glow">
+								<Placeholder xs={7} />
+							</Placeholder>
 						</Card>
 					</Col>
-				))}
+				)}
 				<Col lg="2">
-					<Card className="border-info">
-						<Card.Header className="text-truncate">LEFI (total)</Card.Header>
+					<Card
+						className="border-info"
+						style={{ cursor: "help" }}
+						onClick={handleShowBOPREAL}
+					>
+						<Card.Header className="text-truncate">BOPREAL *</Card.Header>
 						<Card.Body>
-							<Card.Title>
-								{extra !== undefined
-									? `$ ${numberWithCommas(Math.trunc(extra.lefi))}`
-									: "$ ..."}
-							</Card.Title>
-							<Card.Subtitle>en millones de pesos</Card.Subtitle>
+							{extra !== undefined ? (
+								<Card.Title>
+									$ {numberWithCommas(Math.trunc(extra.bopreal))}
+								</Card.Title>
+							) : (
+								<Placeholder as={Card.Title} animation="glow">
+									<Placeholder xs={4} />
+								</Placeholder>
+							)}
+							<Card.Title></Card.Title>
+							<Card.Subtitle>en millones de dólares</Card.Subtitle>
 						</Card.Body>
-						<Card.Footer className="text-body-secondary">
-							by <a href="https://x.com/CotoDelCentral">@CotoDelCentral</a>
-						</Card.Footer>
+						{extra !== undefined ? (
+							<Card.Footer className="text-body-secondary">
+								<Stack direction="horizontal">
+									<div>{extra.boprealDato}</div>
+									<div className="ms-auto">
+										<a href="https://x.com/CotoDelCentral">@CotoDelCentral</a>
+									</div>
+								</Stack>
+							</Card.Footer>
+						) : (
+							<Placeholder as={Card.Footer} animation="glow">
+								<Placeholder xs={4} />
+							</Placeholder>
+						)}
 					</Card>
 				</Col>
 				<Col lg="2">
@@ -271,84 +390,266 @@ function DatosBCRA() {
 							Depósitos del Gobierno
 						</Card.Header>
 						<Card.Body>
-							<Card.Title>
-								{extra !== undefined
-									? `$ ${numberWithCommas(Math.trunc(extra.depositosBCRA))}`
-									: "$ ..."}
-							</Card.Title>
+							{extra !== undefined ? (
+								<Card.Title>
+									$ {numberWithCommas(Math.trunc(extra.depositosBCRA))}
+								</Card.Title>
+							) : (
+								<Placeholder as={Card.Title} animation="glow">
+									<Placeholder xs={4} />
+								</Placeholder>
+							)}
+							<Card.Title></Card.Title>
 							<Card.Subtitle>en millones de pesos</Card.Subtitle>
 						</Card.Body>
 						<Card.Footer className="text-body-secondary">
-							by <a href="https://x.com/CotoDelCentral">@CotoDelCentral</a>
+							<Stack direction="horizontal">
+								<div>
+									{extra?.lefiDepositosDato !== undefined
+										? `Hace ${Math.trunc(
+												dateDifferenceInSeconds(
+													Date.parse(extra.lefiDepositosDato),
+													Date.now()
+												)
+										  )} días`
+										: "..."}
+								</div>
+								<div className="ms-auto">
+									<a href="https://x.com/CotoDelCentral">@CotoDelCentral</a>
+								</div>
+							</Stack>
 						</Card.Footer>
 					</Card>
 				</Col>
-				<Col lg="3">
-					<Card>
+				<Col lg="2">
+					<Card className="border-info">
 						<Card.Header className="text-truncate">
 							Base Monetaria Ampliada
 						</Card.Header>
 						<Card.Body>
-							<Card.Title>
-								{extra !== undefined
-									? `$ ${numberWithCommas(Math.trunc(baseMonetariaAmpliada))}`
-									: "$ ..."}
-							</Card.Title>
+							{extra !== undefined ? (
+								<Card.Title>
+									$ {numberWithCommas(Math.trunc(baseMonetariaAmpliada))}
+								</Card.Title>
+							) : (
+								<Placeholder as={Card.Title} animation="glow">
+									<Placeholder xs={4} />
+								</Placeholder>
+							)}
 							<Card.Subtitle>en millones de pesos</Card.Subtitle>
 						</Card.Body>
+						<Card.Footer className="text-body-secondary">
+							BM + Depósitos del Gobierno
+						</Card.Footer>
 					</Card>
 				</Col>
 			</Row>
+			<Modal show={showBOPREAL} onHide={handleCloseBOPREAL}>
+				<Modal.Header closeButton>
+					<Modal.Title>¿Qué son los BOPREAL?</Modal.Title>
+				</Modal.Header>
+				<Modal.Body>
+					Son títulos públicos emitidos por el Banco Central de la República
+					Argentina (BCRA) diseñados para que sean adquiridos, en principio, por
+					importadores de bienes y servicios con deudas en moneda extranjera por
+					sus operaciones de comercio internacional. Los BOPREAL se emiten en
+					dólares estadounidenses y son pagaderos en esta moneda.
+				</Modal.Body>
+				<Modal.Footer>
+					<Button variant="secondary" onClick={handleCloseBOPREAL}>
+						Cerrar
+					</Button>
+				</Modal.Footer>
+			</Modal>
+			<h4 className="text-center m-3">LEFI (Letra Fiscal de Liquidez) *</h4>
+			<Row className="justify-content-center gap-3">
+				<Col lg="2">
+					<Card
+						className="border-info"
+						style={{ cursor: "help" }}
+						onClick={handleShow}
+					>
+						<Card.Header className="text-truncate">LEFI (BCRA)</Card.Header>
+						<Card.Body>
+							{extra !== undefined ? (
+								<Card.Title>
+									$ {numberWithCommas(Math.trunc(extra.lefiBCRA))}
+								</Card.Title>
+							) : (
+								<Placeholder as={Card.Title} animation="glow">
+									<Placeholder xs={4} />
+								</Placeholder>
+							)}
+							<Card.Subtitle>en valores técnicos</Card.Subtitle>
+						</Card.Body>
+						<Card.Footer className="text-body-secondary">
+							<Stack direction="horizontal">
+								<div>
+									{extra?.lefiDepositosDato !== undefined
+										? `Hace ${Math.trunc(
+												dateDifferenceInSeconds(
+													Date.parse(extra.lefiDepositosDato),
+													Date.now()
+												)
+										  )} días`
+										: "..."}
+								</div>
+								<div className="ms-auto">
+									<a href="https://x.com/CotoDelCentral">@CotoDelCentral</a>
+								</div>
+							</Stack>
+						</Card.Footer>
+					</Card>
+				</Col>
+				<Col lg="2">
+					<Card
+						className="border-info"
+						style={{ cursor: "help" }}
+						onClick={handleShow}
+					>
+						<Card.Header className="text-truncate">
+							LEFI (Entidades financieras)
+						</Card.Header>
+						<Card.Body>
+							{extra !== undefined ? (
+								<Card.Title>
+									$ {numberWithCommas(Math.trunc(extra.lefiBancos))}
+								</Card.Title>
+							) : (
+								<Placeholder as={Card.Title} animation="glow">
+									<Placeholder xs={4} />
+								</Placeholder>
+							)}
+							<Card.Subtitle>en valores técnicos</Card.Subtitle>
+						</Card.Body>
+						<Card.Footer className="text-body-secondary">
+							<Stack direction="horizontal">
+								<div>
+									{extra?.lefiDepositosDato !== undefined
+										? `Hace ${Math.trunc(
+												dateDifferenceInSeconds(
+													Date.parse(extra.lefiDepositosDato),
+													Date.now()
+												)
+										  )} días`
+										: "..."}
+								</div>
+								<div className="ms-auto">
+									<a href="https://x.com/CotoDelCentral">@CotoDelCentral</a>
+								</div>
+							</Stack>
+						</Card.Footer>
+					</Card>
+				</Col>
+			</Row>
+			<Modal show={show} onHide={handleClose}>
+				<Modal.Header closeButton>
+					<Modal.Title>¿Qué son las LEFI?</Modal.Title>
+				</Modal.Header>
+				<Modal.Body>
+					Las LEFI son instrumentos de deuda emitidos por el Tesoro Nacional con
+					un plazo máximo de un año. Estas letras se adquieren a una tasa de
+					interés determinada por la política monetaria del Banco Central de la
+					República Argentina (BCRA). Aunque el BCRA establece la tasa, es el
+					Tesoro Nacional quien asume el pago de los intereses.
+				</Modal.Body>
+				<Modal.Footer>
+					<Button variant="secondary" onClick={handleClose}>
+						Cerrar
+					</Button>
+				</Modal.Footer>
+			</Modal>
 			<h4 className="text-center m-3">Inflación</h4>
 			<Row className="justify-content-center gap-3">
-				{inflacion?.map((valor, index) => (
-					<Col lg="2" key={index}>
-						<Card className="border-primary">
-							<Card.Header className="text-truncate">
-								{valor.nombre !== null ? valor.nombre : "..."}
-							</Card.Header>
-							{valor.esPorcentaje !== null ? (
-								valor.esPorcentaje ? (
-									<Card.Body className="text-center">
-										<Card.Text as="h3" className="text-info">
-											{valor.valor !== null ? `${valor.valor}%` : "...%"}
-										</Card.Text>
-									</Card.Body>
+				{inflacion !== undefined ? (
+					inflacion?.map((valor, index) => (
+						<Col lg="2" key={index}>
+							<Card
+								className="border-primary"
+								style={{ cursor: "pointer" }}
+								onClick={() =>
+									handleShowGraph(
+										valor.idVariable !== undefined ? valor.idVariable : 27,
+										valor.nombre,
+										valor.esMensual !== undefined ? valor.esMensual : true,
+										valor.nombreValor !== undefined
+											? valor.nombreValor
+											: "Valor"
+									)
+								}
+							>
+								<Card.Header className="text-truncate">
+									{valor.nombre !== null ? valor.nombre : "..."}
+								</Card.Header>
+								{valor.esPorcentaje !== null ? (
+									valor.esPorcentaje ? (
+										<Card.Body className="text-center">
+											<Card.Text as="h3" className="text-info">
+												{valor.valor !== null ? `${valor.valor}%` : "...%"}
+											</Card.Text>
+										</Card.Body>
+									) : (
+										<Card.Body>
+											<Card.Title>
+												{valor.valor !== null
+													? `$ ${numberWithCommas(Math.trunc(valor.valor))}`
+													: "$ ..."}
+											</Card.Title>
+											<Card.Subtitle>
+												en millones de {valor.esDolar ? "dólares" : "pesos"}
+											</Card.Subtitle>
+										</Card.Body>
+									)
 								) : (
 									<Card.Body>
-										<Card.Title>
-											{valor.valor !== null
-												? `$ ${numberWithCommas(Math.trunc(valor.valor))}`
-												: "$ ..."}
-										</Card.Title>
-										<Card.Subtitle>
-											en millones de {valor.esDolar ? "dólares" : "pesos"}
-										</Card.Subtitle>
+										<Card.Text>Cargando...</Card.Text>
 									</Card.Body>
-								)
-							) : (
-								<Card.Body>
-									<Card.Text>Cargando...</Card.Text>
-								</Card.Body>
-							)}
-							<Card.Footer className="text-body-secondary">
-								{valor.fecha !== null
-									? valor.esMensual
-										? month[new Date(valor.fecha).getMonth()]
-										: `Hace ${Math.trunc(
-												dateDifferenceInSeconds(valor.fecha, Date.now())
-										  )} días`
-									: "..."}
-							</Card.Footer>
+								)}
+								<Card.Footer className="text-body-secondary">
+									{valor.fecha !== null
+										? valor.esMensual
+											? month[new Date(valor.fecha).getMonth()]
+											: `Hace ${Math.trunc(
+													dateDifferenceInSeconds(valor.fecha, Date.now())
+											  )} días`
+										: "..."}
+								</Card.Footer>
+							</Card>
+						</Col>
+					))
+				) : (
+					<Col lg="2">
+						<Card>
+							<Placeholder as={Card.Header} animation="glow">
+								<Placeholder xs={4} />
+							</Placeholder>
+							<Card.Body>
+								<Placeholder as={Card.Title} animation="glow">
+									<Placeholder xs={6} />
+								</Placeholder>
+							</Card.Body>
+							<Placeholder as={Card.Footer} animation="glow">
+								<Placeholder xs={7} />
+							</Placeholder>
 						</Card>
 					</Col>
-				))}
+				)}
 			</Row>
 			<h4 className="text-center m-3">Cotizaciones</h4>
 			<Row className="justify-content-center gap-3">
 				{cotizaziones?.map((valor, index) => (
 					<Col lg="2" key={index}>
-						<Card>
+						<Card
+							style={{ cursor: "pointer" }}
+							onClick={() =>
+								handleShowGraph(
+									valor.idVariable !== undefined ? valor.idVariable : 27,
+									valor.nombre,
+									valor.esMensual !== undefined ? valor.esMensual : false,
+									valor.nombreValor !== undefined ? valor.nombreValor : "Valor"
+								)
+							}
+						>
 							<Card.Header className="text-truncate">
 								{valor.nombre !== null ? valor.nombre : "..."}
 							</Card.Header>
@@ -374,13 +675,18 @@ function DatosBCRA() {
 								</Card.Body>
 							)}
 							<Card.Footer className="text-body-secondary">
-								{valor.fecha !== null
-									? valor.esMensual
-										? month[new Date(valor.fecha).getMonth()]
-										: `Hace ${Math.trunc(
-												dateDifferenceInSeconds(valor.fecha, Date.now())
-										  )} días`
-									: "..."}
+								<Stack direction="horizontal">
+									<div>
+										{valor.fecha !== null
+											? valor.esMensual
+												? month[new Date(valor.fecha).getMonth()]
+												: `Hace ${Math.trunc(
+														dateDifferenceInSeconds(valor.fecha, Date.now())
+												  )} días`
+											: "..."}
+									</div>
+									<div className="ms-auto">Fuente: BCRA</div>
+								</Stack>
 							</Card.Footer>
 						</Card>
 					</Col>
@@ -389,18 +695,42 @@ function DatosBCRA() {
 					<Card>
 						<Card.Header className="text-truncate">Dólar Reservas</Card.Header>
 						<Card.Body>
-							<Card.Title>
-								{extra !== undefined
-									? `$ ${numberWithCommas(
-											Math.trunc(baseMonetariaAmpliada / reservasBCRA)
-									  )}`
-									: "$ ..."}
-							</Card.Title>
+							{extra !== undefined ? (
+								<Card.Title>
+									${" "}
+									{numberWithCommas(
+										Math.trunc(baseMonetariaAmpliada / reservasBCRA)
+									)}
+								</Card.Title>
+							) : (
+								<Placeholder as={Card.Title} animation="glow">
+									<Placeholder xs={4} />
+								</Placeholder>
+							)}
 							<Card.Subtitle>BMA / Reservas</Card.Subtitle>
 						</Card.Body>
 					</Card>
 				</Col>
 			</Row>
+			<Modal show={showGraph} onHide={handleCloseGraph} size="lg" centered>
+				<Modal.Header closeButton>
+					<Modal.Title>{graphNombre}</Modal.Title>
+				</Modal.Header>
+				<Modal.Body>
+					<Graph
+						idVariable={graphVariable}
+						date={new Date()}
+						nombreGraph={graphNombre}
+						nombreValor={graphValor}
+						porMes={graphMensual}
+					/>
+				</Modal.Body>
+				<Modal.Footer>
+					<Button variant="secondary" onClick={handleCloseGraph}>
+						Cerrar
+					</Button>
+				</Modal.Footer>
+			</Modal>
 			<p className="text-center mt-4">Última actualización: {lastUpdated}</p>
 		</Container>
 	);

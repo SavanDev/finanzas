@@ -16,7 +16,9 @@ function NavbarWebsite() {
 	return (
 		<Navbar expand="lg" sticky="top" className="bg-body-tertiary mb-3">
 			<Container fluid>
-				<Navbar.Brand href="#">Finanzas</Navbar.Brand>
+				<Navbar.Brand href="#" className="icon-link">
+					<CurrencyDollar /> Finanzas
+				</Navbar.Brand>
 				<Navbar.Toggle aria-controls="navbar-bar" />
 				<Navbar.Collapse id="navbar-bar">
 					<Nav className="me-auto">
