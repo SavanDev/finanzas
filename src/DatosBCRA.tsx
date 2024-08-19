@@ -25,6 +25,8 @@ interface ApiSpecialResponse {
 	bopreal: number;
 	boprealDato: string;
 	lefiDepositosDato: string;
+	reservasBCRA: number;
+	reservasBCRADato: string;
 }
 
 interface VariableData {
@@ -46,6 +48,8 @@ interface VariableExtraData {
 	bopreal: number;
 	boprealDato: string;
 	lefiDepositosDato: string;
+	reservasBCRA: number;
+	reservasBCRADato: string;
 }
 
 // URL de la API del BCRA
@@ -70,6 +74,7 @@ const month = [
 
 let baseMonetariaAmpliada: number = 0;
 let reservasBCRA: number = 0;
+let valorDolar: number = 1;
 
 let graphVariable: number = 27;
 let graphNombre: string = "Inflación mensual";
@@ -90,6 +95,15 @@ function DatosBCRA() {
 
 	const numberWithCommas = (x: number): string => {
 		return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+	};
+
+	const contadorDias = (fecha: number) => {
+		let dias: number = Math.trunc(dateDifferenceInSeconds(fecha, Date.now()));
+		let textoDias: string;
+		if (dias < 1) textoDias = "Hoy";
+		else if (dias === 1) textoDias = "Hace 1 día";
+		else textoDias = `Hace ${dias} días`;
+		return textoDias;
 	};
 
 	const [show, setShow] = useState(false);
@@ -151,7 +165,6 @@ function DatosBCRA() {
 								orden: 0,
 								idVariable: element.idVariable,
 							});
-							reservasBCRA = element.valor;
 							break;
 						case 15:
 							datosAMostrar.push({
@@ -217,6 +230,7 @@ function DatosBCRA() {
 								orden: 1,
 								idVariable: element.idVariable,
 							});
+							valorDolar = element.valor;
 							break;
 					}
 				});
@@ -240,8 +254,11 @@ function DatosBCRA() {
 						bopreal: element.bopreal,
 						boprealDato: element.boprealDato,
 						lefiDepositosDato: element.lefiDepositosDato,
+						reservasBCRA: element.reservasBCRA,
+						reservasBCRADato: element.reservasBCRADato,
 					});
 					baseMonetariaAmpliada += element.depositosBCRA;
+					reservasBCRA = element.reservasBCRA;
 				});
 
 				// Actualizar el estado con los datos formateados
@@ -301,7 +318,14 @@ function DatosBCRA() {
 										<Card.Body>
 											<Card.Title>
 												{valor.valor !== null
-													? `$ ${numberWithCommas(Math.trunc(valor.valor))}`
+													? `$ ${numberWithCommas(
+															Math.trunc(
+																extra?.reservasBCRA !== undefined &&
+																	valor.idVariable === 1
+																	? extra.reservasBCRA
+																	: valor.valor
+															)
+													  )}`
 													: "$ ..."}
 											</Card.Title>
 											<Card.Subtitle>
@@ -320,9 +344,12 @@ function DatosBCRA() {
 											{valor.fecha !== null
 												? valor.esMensual
 													? month[new Date(valor.fecha).getMonth()]
-													: `Hace ${Math.trunc(
-															dateDifferenceInSeconds(valor.fecha, Date.now())
-													  )} días`
+													: contadorDias(
+															extra?.reservasBCRADato !== undefined &&
+																valor.idVariable === 1
+																? Date.parse(extra.reservasBCRADato)
+																: valor.fecha
+													  )
 												: "..."}
 										</div>
 										<div className="ms-auto">Fuente: BCRA</div>
@@ -358,7 +385,7 @@ function DatosBCRA() {
 						<Card.Body>
 							{extra !== undefined ? (
 								<Card.Title>
-									$ {numberWithCommas(Math.trunc(extra.bopreal))}
+									$ {numberWithCommas(Math.trunc(extra.bopreal / valorDolar))}
 								</Card.Title>
 							) : (
 								<Placeholder as={Card.Title} animation="glow">
@@ -406,12 +433,7 @@ function DatosBCRA() {
 							<Stack direction="horizontal">
 								<div>
 									{extra?.lefiDepositosDato !== undefined
-										? `Hace ${Math.trunc(
-												dateDifferenceInSeconds(
-													Date.parse(extra.lefiDepositosDato),
-													Date.now()
-												)
-										  )} días`
+										? contadorDias(Date.parse(extra.lefiDepositosDato))
 										: "..."}
 								</div>
 								<div className="ms-auto">
@@ -486,12 +508,7 @@ function DatosBCRA() {
 							<Stack direction="horizontal">
 								<div>
 									{extra?.lefiDepositosDato !== undefined
-										? `Hace ${Math.trunc(
-												dateDifferenceInSeconds(
-													Date.parse(extra.lefiDepositosDato),
-													Date.now()
-												)
-										  )} días`
+										? contadorDias(Date.parse(extra.lefiDepositosDato))
 										: "..."}
 								</div>
 								<div className="ms-auto">
@@ -526,12 +543,7 @@ function DatosBCRA() {
 							<Stack direction="horizontal">
 								<div>
 									{extra?.lefiDepositosDato !== undefined
-										? `Hace ${Math.trunc(
-												dateDifferenceInSeconds(
-													Date.parse(extra.lefiDepositosDato),
-													Date.now()
-												)
-										  )} días`
+										? contadorDias(Date.parse(extra.lefiDepositosDato))
 										: "..."}
 								</div>
 								<div className="ms-auto">
@@ -609,9 +621,7 @@ function DatosBCRA() {
 									{valor.fecha !== null
 										? valor.esMensual
 											? month[new Date(valor.fecha).getMonth()]
-											: `Hace ${Math.trunc(
-													dateDifferenceInSeconds(valor.fecha, Date.now())
-											  )} días`
+											: contadorDias(valor.fecha)
 										: "..."}
 								</Card.Footer>
 							</Card>
@@ -680,9 +690,7 @@ function DatosBCRA() {
 										{valor.fecha !== null
 											? valor.esMensual
 												? month[new Date(valor.fecha).getMonth()]
-												: `Hace ${Math.trunc(
-														dateDifferenceInSeconds(valor.fecha, Date.now())
-												  )} días`
+												: contadorDias(valor.fecha)
 											: "..."}
 									</div>
 									<div className="ms-auto">Fuente: BCRA</div>

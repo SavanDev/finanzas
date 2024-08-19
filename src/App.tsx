@@ -35,7 +35,7 @@ const App: React.FC = () => {
 	return (
 		<>
 			<NavbarWebsite />
-			{renderAlert()}
+			{/*renderAlert()*/}
 			<Routes>
 				<Route path="/" element={<DatosDolar />} />
 				<Route path="bcra" element={<DatosBCRA />} />
