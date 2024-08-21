@@ -74,7 +74,6 @@ const month = [
 
 let baseMonetariaAmpliada: number = 0;
 let reservasBCRA: number = 0;
-let valorDolar: number = 1;
 
 let graphVariable: number = 27;
 let graphNombre: string = "Inflación mensual";
@@ -230,7 +229,6 @@ function DatosBCRA() {
 								orden: 1,
 								idVariable: element.idVariable,
 							});
-							valorDolar = element.valor;
 							break;
 					}
 				});
@@ -257,7 +255,7 @@ function DatosBCRA() {
 						reservasBCRA: element.reservasBCRA,
 						reservasBCRADato: element.reservasBCRADato,
 					});
-					baseMonetariaAmpliada += element.depositosBCRA;
+					baseMonetariaAmpliada += element.lefiBancos + element.depositosBCRA;
 					reservasBCRA = element.reservasBCRA;
 				});
 
@@ -290,7 +288,7 @@ function DatosBCRA() {
 			<Row className="justify-content-center gap-3">
 				{datos !== undefined ? (
 					datos?.map((valor, index) => (
-						<Col lg="2" key={index}>
+						<Col lg={3} xl={2} key={index}>
 							<Card
 								style={{ cursor: "pointer" }}
 								onClick={() =>
@@ -352,14 +350,21 @@ function DatosBCRA() {
 													  )
 												: "..."}
 										</div>
-										<div className="ms-auto">Fuente: BCRA</div>
+										<div className="ms-auto">
+											<a
+												href="https://www.bcra.gob.ar/"
+												className="link-info link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
+											>
+												BCRA
+											</a>
+										</div>
 									</Stack>
 								</Card.Footer>
 							</Card>
 						</Col>
 					))
 				) : (
-					<Col lg="2">
+					<Col lg={3} xl={2}>
 						<Card>
 							<Placeholder as={Card.Header} animation="glow">
 								<Placeholder xs={4} />
@@ -375,7 +380,7 @@ function DatosBCRA() {
 						</Card>
 					</Col>
 				)}
-				<Col lg="2">
+				<Col lg={3} xl={2}>
 					<Card
 						className="border-info"
 						style={{ cursor: "help" }}
@@ -385,7 +390,7 @@ function DatosBCRA() {
 						<Card.Body>
 							{extra !== undefined ? (
 								<Card.Title>
-									$ {numberWithCommas(Math.trunc(extra.bopreal / valorDolar))}
+									$ {numberWithCommas(Math.trunc(extra.bopreal))}
 								</Card.Title>
 							) : (
 								<Placeholder as={Card.Title} animation="glow">
@@ -393,14 +398,19 @@ function DatosBCRA() {
 								</Placeholder>
 							)}
 							<Card.Title></Card.Title>
-							<Card.Subtitle>en millones de dólares</Card.Subtitle>
+							<Card.Subtitle>en millones de pesos</Card.Subtitle>
 						</Card.Body>
 						{extra !== undefined ? (
 							<Card.Footer className="text-body-secondary">
 								<Stack direction="horizontal">
 									<div>{extra.boprealDato}</div>
 									<div className="ms-auto">
-										<a href="https://x.com/CotoDelCentral">@CotoDelCentral</a>
+										<a
+											href="https://x.com/CotoDelCentral"
+											className="link-info link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
+										>
+											@CotoDelCentral
+										</a>
 									</div>
 								</Stack>
 							</Card.Footer>
@@ -411,8 +421,8 @@ function DatosBCRA() {
 						)}
 					</Card>
 				</Col>
-				<Col lg="2">
-					<Card className="border-info">
+				<Col lg={4} xl={2}>
+					<Card>
 						<Card.Header className="text-truncate">
 							Depósitos del Gobierno
 						</Card.Header>
@@ -437,14 +447,19 @@ function DatosBCRA() {
 										: "..."}
 								</div>
 								<div className="ms-auto">
-									<a href="https://x.com/CotoDelCentral">@CotoDelCentral</a>
+									<a
+										href="https://x.com/CotoDelCentral"
+										className="link-info link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
+									>
+										@CotoDelCentral
+									</a>
 								</div>
 							</Stack>
 						</Card.Footer>
 					</Card>
 				</Col>
-				<Col lg="2">
-					<Card className="border-info">
+				<Col lg={4} xl={3}>
+					<Card className="border-primary">
 						<Card.Header className="text-truncate">
 							Base Monetaria Ampliada
 						</Card.Header>
@@ -461,7 +476,7 @@ function DatosBCRA() {
 							<Card.Subtitle>en millones de pesos</Card.Subtitle>
 						</Card.Body>
 						<Card.Footer className="text-body-secondary">
-							BM + Depósitos del Gobierno
+							BM + LEFI + Depósitos del Gobierno
 						</Card.Footer>
 					</Card>
 				</Col>
@@ -485,12 +500,8 @@ function DatosBCRA() {
 			</Modal>
 			<h4 className="text-center m-3">LEFI (Letra Fiscal de Liquidez) *</h4>
 			<Row className="justify-content-center gap-3">
-				<Col lg="2">
-					<Card
-						className="border-info"
-						style={{ cursor: "help" }}
-						onClick={handleShow}
-					>
+				<Col lg={4} xl={2}>
+					<Card style={{ cursor: "help" }} onClick={handleShow}>
 						<Card.Header className="text-truncate">LEFI (BCRA)</Card.Header>
 						<Card.Body>
 							{extra !== undefined ? (
@@ -512,15 +523,20 @@ function DatosBCRA() {
 										: "..."}
 								</div>
 								<div className="ms-auto">
-									<a href="https://x.com/CotoDelCentral">@CotoDelCentral</a>
+									<a
+										href="https://x.com/CotoDelCentral"
+										className="link-info link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
+									>
+										@CotoDelCentral
+									</a>
 								</div>
 							</Stack>
 						</Card.Footer>
 					</Card>
 				</Col>
-				<Col lg="2">
+				<Col lg={4} xl={2}>
 					<Card
-						className="border-info"
+						className="border-primary"
 						style={{ cursor: "help" }}
 						onClick={handleShow}
 					>
@@ -547,7 +563,12 @@ function DatosBCRA() {
 										: "..."}
 								</div>
 								<div className="ms-auto">
-									<a href="https://x.com/CotoDelCentral">@CotoDelCentral</a>
+									<a
+										href="https://x.com/CotoDelCentral"
+										className="link-info link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
+									>
+										@CotoDelCentral
+									</a>
 								</div>
 							</Stack>
 						</Card.Footer>
@@ -575,9 +596,8 @@ function DatosBCRA() {
 			<Row className="justify-content-center gap-3">
 				{inflacion !== undefined ? (
 					inflacion?.map((valor, index) => (
-						<Col lg="2" key={index}>
+						<Col lg={3} xl={2} key={index}>
 							<Card
-								className="border-primary"
 								style={{ cursor: "pointer" }}
 								onClick={() =>
 									handleShowGraph(
@@ -628,7 +648,7 @@ function DatosBCRA() {
 						</Col>
 					))
 				) : (
-					<Col lg="2">
+					<Col lg={3} xl={2}>
 						<Card>
 							<Placeholder as={Card.Header} animation="glow">
 								<Placeholder xs={4} />
@@ -648,7 +668,7 @@ function DatosBCRA() {
 			<h4 className="text-center m-3">Cotizaciones</h4>
 			<Row className="justify-content-center gap-3">
 				{cotizaziones?.map((valor, index) => (
-					<Col lg="2" key={index}>
+					<Col lg={3} xl={2} key={index}>
 						<Card
 							style={{ cursor: "pointer" }}
 							onClick={() =>
@@ -693,30 +713,38 @@ function DatosBCRA() {
 												: contadorDias(valor.fecha)
 											: "..."}
 									</div>
-									<div className="ms-auto">Fuente: BCRA</div>
+									<div className="ms-auto">
+										<a
+											href="https://www.bcra.gob.ar/"
+											className="link-info link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
+											target="_blank"
+										>
+											BCRA
+										</a>
+									</div>
 								</Stack>
 							</Card.Footer>
 						</Card>
 					</Col>
 				))}
-				<Col lg="2">
+				<Col lg={3} xl={2}>
 					<Card>
 						<Card.Header className="text-truncate">Dólar Reservas</Card.Header>
 						<Card.Body>
 							{extra !== undefined ? (
-								<Card.Title>
+								<Card.Text as="h3">
 									${" "}
 									{numberWithCommas(
 										Math.trunc(baseMonetariaAmpliada / reservasBCRA)
 									)}
-								</Card.Title>
+								</Card.Text>
 							) : (
 								<Placeholder as={Card.Title} animation="glow">
 									<Placeholder xs={4} />
 								</Placeholder>
 							)}
-							<Card.Subtitle>BMA / Reservas</Card.Subtitle>
 						</Card.Body>
+						<Card.Footer>BMA / Reservas BCRA</Card.Footer>
 					</Card>
 				</Col>
 			</Row>

@@ -14,6 +14,8 @@ interface DolarData {
 }
 
 const apiUrlDolar = "https://criptoya.com/api/dolar";
+let dolarOficial: number;
+let dolarOficialTimestamp: number;
 
 function DatosDolar() {
 	// Estado para almacenar los datos de la API
@@ -39,6 +41,9 @@ function DatosDolar() {
 
 				const data = await responseDolar.json();
 
+				dolarOficial = data.oficial.price;
+				dolarOficialTimestamp = data.oficial.timestamp;
+
 				// Transformar los datos en el formato adecuado
 				const formattedData: DolarData[] = [
 					{
@@ -52,19 +57,6 @@ function DatosDolar() {
 						price: data.oficial.price,
 						variation: data.oficial.variation,
 						timestamp: data.oficial.timestamp,
-					},
-					{
-						type: "Ahorro",
-						ask: data.ahorro.ask,
-						bid: data.ahorro.bid,
-						variation: data.ahorro.variation,
-						timestamp: data.ahorro.timestamp,
-					},
-					{
-						type: "Tarjeta",
-						price: data.tarjeta.price,
-						variation: data.tarjeta.variation,
-						timestamp: data.tarjeta.timestamp,
 					},
 					{
 						type: "Blue",
@@ -115,11 +107,11 @@ function DatosDolar() {
 
 	return (
 		<Container fluid>
-			<h1 className="display-5 m-3">Datos del Dólar</h1>
+			<h1 className="display-5 m-3">Valores del dólar</h1>
 			<Row className="justify-content-center gap-3">
 				{currencies !== undefined ? (
 					currencies?.map((currency, index) => (
-						<Col lg="2" key={index}>
+						<Col lg={3} xl={2} key={index}>
 							<Card>
 								<Card.Header className="text-truncate icon-link">
 									<Cash />
@@ -136,10 +128,19 @@ function DatosDolar() {
 									{currency.variation !== null ? (
 										<Card.Subtitle
 											className={
-												currency.variation < 0 ? "text-danger" : "text-success"
+												currency.variation < 0
+													? "text-danger"
+													: currency.variation === 0
+													? "text-secondary"
+													: "text-success"
 											}
 										>
-											{currency.variation < 0 ? "▼" : "▲"} {currency.variation}
+											{currency.variation < 0
+												? "▼"
+												: currency.variation === 0
+												? "~"
+												: "▲"}{" "}
+											{currency.variation}
 										</Card.Subtitle>
 									) : (
 										<Card.Subtitle>...</Card.Subtitle>
@@ -157,7 +158,15 @@ function DatosDolar() {
 												"..."
 											)}
 										</div>
-										<div className="ms-auto">Fuente: CriptoYa</div>
+										<div className="ms-auto">
+											<a
+												className="link-info link-underline-opacity-0 link-offset-2 link-underline-opacity-100-hover"
+												href="https://criptoya.com/"
+												target="_blank"
+											>
+												CriptoYa
+											</a>
+										</div>
 									</Stack>
 								</Card.Footer>
 							</Card>
@@ -180,6 +189,83 @@ function DatosDolar() {
 						</Card>
 					</Col>
 				)}
+				<Col lg={3} xl={2}>
+					<Card>
+						<Card.Header className="text-truncate icon-link text-info">
+							<Cash />
+							<b>Tarjeta / Ahorro</b>
+						</Card.Header>
+						<Card.Body>
+							<Card.Title>
+								$ {dolarOficial + (60 / 100) * dolarOficial}
+							</Card.Title>
+							<Card.Subtitle>
+								<Stack direction="horizontal">
+									<span>30% PAIS</span>
+									<span className="ms-auto">30% Ganancias</span>
+								</Stack>
+							</Card.Subtitle>
+						</Card.Body>
+						<Card.Footer className="text-body-secondary">
+							{dolarOficialTimestamp !== undefined ? (
+								<ReactTimeAgo
+									date={new Date(dolarOficialTimestamp * 1000)}
+									locale="es-AR"
+								/>
+							) : (
+								"..."
+							)}
+						</Card.Footer>
+					</Card>
+				</Col>
+				<Col lg={3} xl={2}>
+					<Card>
+						<Card.Header className="text-truncate icon-link">
+							<Cash />
+							<b>Importador</b>
+						</Card.Header>
+						<Card.Body>
+							<Card.Title>
+								$ {Math.trunc(dolarOficial + (17.5 / 100) * dolarOficial)}
+							</Card.Title>
+							<Card.Subtitle>
+								<span>17,5% PAIS</span>
+							</Card.Subtitle>
+						</Card.Body>
+						<Card.Footer className="text-body-secondary">
+							{dolarOficialTimestamp !== undefined ? (
+								<ReactTimeAgo
+									date={new Date(dolarOficialTimestamp * 1000)}
+									locale="es-AR"
+								/>
+							) : (
+								"..."
+							)}
+						</Card.Footer>
+					</Card>
+				</Col>
+			</Row>
+			<h4 className="text-center m-3">Próximos cambios</h4>
+			<Row className="justify-content-center gap-3">
+				<Col lg={3} xl={2}>
+					<Card>
+						<Card.Header className="text-truncate icon-link">
+							<Cash />
+							<b>Importador</b>
+						</Card.Header>
+						<Card.Body>
+							<Card.Title>
+								$ {Math.trunc(dolarOficial + (7.5 / 100) * dolarOficial)}
+							</Card.Title>
+							<Card.Subtitle>
+								<span className="text-danger">▼ 7,5% PAIS</span>
+							</Card.Subtitle>
+						</Card.Body>
+						<Card.Footer className="text-body-secondary">
+							Septiembre
+						</Card.Footer>
+					</Card>
+				</Col>
 			</Row>
 			<p className="text-center mt-4">Última actualización: {lastUpdated}</p>
 		</Container>
